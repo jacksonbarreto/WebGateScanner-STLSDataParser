@@ -48,7 +48,7 @@ jobs:
     - name: Build and push Docker image
       run: |
         timestamp=$(date +%Y%m%d%H%M%S)
-        docker build . --file Dockerfile --tag jacksonbarreto/dnssecanalyzer:latest
-        docker tag jacksonbarreto/dnssecanalyzer:latest jacksonbarreto/dnssecanalyzer:$timestamp
-        docker push jacksonbarreto/dnssecanalyzer:latest
-        docker push jacksonbarreto/dnssecanalyzer:$timestamp
+        docker build . --file Dockerfile --tag jacksonbarreto/stlsdataparser:latest
+        docker tag jacksonbarreto/stlsdataparser:latest jacksonbarreto/stlsdataparser:$timestamp
+        docker push jacksonbarreto/stlsdataparser:latest
+        docker push jacksonbarreto/stlsdataparser:$timestamp
