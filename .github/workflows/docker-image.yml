@@ -1,0 +1,54 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+ test:
+      name: Run Go tests
+      runs-on: ubuntu-latest
+  
+      steps:
+      - uses: actions/checkout@v3
+  
+      - name: Set up Go
+        uses: actions/setup-go@v4.1.0
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+  
+      - name: Test Go application
+        run: |
+          go mod download
+          go test -v ./...
+ build:
+    name: Build and Push Docker Image
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+    - name: Build and push Docker image
+      run: |
+        timestamp=$(date +%Y%m%d%H%M%S)
+        docker build . --file Dockerfile --tag jacksonbarreto/dnssecanalyzer:latest
+        docker tag jacksonbarreto/dnssecanalyzer:latest jacksonbarreto/dnssecanalyzer:$timestamp
+        docker push jacksonbarreto/dnssecanalyzer:latest
+        docker push jacksonbarreto/dnssecanalyzer:$timestamp
