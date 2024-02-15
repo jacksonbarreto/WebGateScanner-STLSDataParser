@@ -1,0 +1,9 @@
+App:
+  Environment: "prod"
+  Id: "DTLS-DATA-PARSER"
+Kafka:
+  Brokers: ["localhost:9092"]
+  TopicsConsumer: ["security-assessment"]
+  TopicsProducer: ["result-assessment"]
+  TopicsError: ["security-assessment-error"]
+  GroupID: "security-assessment-ingestion-group"
