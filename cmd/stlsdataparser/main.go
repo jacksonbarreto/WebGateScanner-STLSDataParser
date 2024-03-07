@@ -4,6 +4,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/jacksonbarreto/WebGateScanner-STLSDataParser/config"
 	"github.com/jacksonbarreto/WebGateScanner-STLSDataParser/internal/parser"
+	"github.com/jacksonbarreto/WebGateScanner-STLSDataParser/internal/processor"
 	"github.com/jacksonbarreto/WebGateScanner-kafka/producer"
 	"log"
 	"os"
@@ -79,8 +80,8 @@ func main() {
 func worker(files <-chan string, kafkaProducer *producer.Producer) {
 	for filePath := range files {
 		log.Println("Processing file:", filePath)
-		processor := New(kafkaProducer, parser.New())
-		if err := processor.processFile(filePath, kafkaProducer); err != nil {
+		process := processor.New(kafkaProducer, parser.New())
+		if err := process.ProcessFile(filePath); err != nil {
 			log.Println("Failed to process file:", err)
 			os.Rename(filePath, filepath.Join(config.App().ErrorParsePath, filepath.Base(filePath)))
 		} else {

@@ -11,15 +11,15 @@ import (
 )
 
 type Processor struct {
-	KafkaProducer *producer.IProducer
-	Parser        *parser.IParser
+	KafkaProducer producer.IProducer
+	psr           parser.IParser
 	// I will need include logger
 }
 
-func New(producer *producer.IProducer, parser *parser.IParser) *Processor {
+func New(producer producer.IProducer, parsing parser.IParser) *Processor {
 	return &Processor{
 		KafkaProducer: producer,
-		Parser:        parser,
+		psr:           parsing,
 	}
 }
 
@@ -34,7 +34,7 @@ func (p *Processor) ProcessFile(filePath string) error {
 		return unmarshalErr
 	}
 
-	result, parseErr := p.Parser.ParseJson(response)
+	result, parseErr := p.psr.ParseJson(response)
 	if parseErr != nil {
 		return parseErr
 	}
