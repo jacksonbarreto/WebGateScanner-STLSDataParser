@@ -16,7 +16,7 @@ type Processor struct {
 	// I will need include logger
 }
 
-func New(producer producer.IProducer, parsing parser.IParser) *Processor {
+func NewProcessor(producer producer.IProducer, parsing parser.IParser) *Processor {
 	return &Processor{
 		KafkaProducer: producer,
 		psr:           parsing,

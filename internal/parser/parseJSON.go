@@ -9,7 +9,7 @@ type Parser struct {
 	// I will need include logger
 }
 
-func New() *Parser {
+func NewParser() *Parser {
 	return &Parser{}
 }
 

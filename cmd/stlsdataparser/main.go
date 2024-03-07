@@ -8,22 +8,19 @@ import (
 	"github.com/jacksonbarreto/WebGateScanner-kafka/producer"
 	"log"
 	"os"
-	"path/filepath"
 	"sync"
 )
 
-var (
-	processing = make(map[string]bool)
-	lock       = sync.Mutex{}
-)
-
-const configFilePath = ""
-
 func main() {
+	const configFilePath = ""
+	var (
+		processing = make(map[string]bool)
+		lock       = sync.Mutex{}
+	)
 	config.InitConfig(configFilePath)
 	errorPath := config.App().ErrorParsePath
 	pathToWatch := config.App().PathToWatch
-
+	totalWorkers := config.App().Workers
 	kafkaProducer, producerErr := producer.New(config.Kafka().TopicsProducer[0], config.Kafka().Brokers, config.Kafka().MaxRetry)
 	if producerErr != nil {
 		panic(producerErr)
@@ -45,8 +42,9 @@ func main() {
 	filesToProcess := make(chan string, 100) // Buffer pode ser ajustado conforme necessário
 
 	// Iniciando workers
-	for i := 0; i < 10; i++ { // Número de workers
-		go worker(filesToProcess, kafkaProducer)
+	for i := 0; i < totalWorkers; i++ {
+		worker := processor.NewWorker(kafkaProducer, errorPath, &lock, parser.NewParser(), processing)
+		go worker.Do(filesToProcess)
 	}
 
 	go func() {
@@ -54,7 +52,7 @@ func main() {
 			select {
 			case event := <-watcher.Events:
 				if event.Op&fsnotify.Create == fsnotify.Create {
-					log.Println("New file detected:", event.Name)
+					log.Println("NewProcessor file detected:", event.Name)
 					lock.Lock()
 					if !processing[event.Name] {
 						processing[event.Name] = true
@@ -75,20 +73,4 @@ func main() {
 
 	// Bloqueia o main indefinidamente
 	select {}
-}
-
-func worker(files <-chan string, kafkaProducer *producer.Producer) {
-	for filePath := range files {
-		log.Println("Processing file:", filePath)
-		process := processor.New(kafkaProducer, parser.New())
-		if err := process.ProcessFile(filePath); err != nil {
-			log.Println("Failed to process file:", err)
-			os.Rename(filePath, filepath.Join(config.App().ErrorParsePath, filepath.Base(filePath)))
-		} else {
-			os.Remove(filePath)
-		}
-		lock.Lock()
-		delete(processing, filePath)
-		lock.Unlock()
-	}
 }
