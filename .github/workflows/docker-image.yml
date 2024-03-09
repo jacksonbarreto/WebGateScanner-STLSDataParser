@@ -132,7 +132,7 @@ jobs:
         run: |
           git tag ${{ needs.versioning.outputs.new_tag }}
           git push origin ${{ needs.versioning.outputs.new_tag }}
-
+          
       - name: Generate release notes
         id: generate_notes
         run: |
