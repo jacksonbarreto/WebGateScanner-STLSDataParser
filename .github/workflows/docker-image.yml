@@ -1,54 +1,161 @@
+# Pipeline for building and pushing a Docker image to DockerHub
+# .github/workflows/
 name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
- test:
-      name: Run Go tests
-      runs-on: ubuntu-latest
-  
-      steps:
-      - uses: actions/checkout@v3
-  
+  test:
+    name: Run Go tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Set up Go
-        uses: actions/setup-go@v4.1.0
+        uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
+          go-version-file: "./go.mod"
+          cache: false
 
       - name: Cache Go modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-  
-      - name: Test Go application
+
+      - name: Run tests
         run: |
           go mod download
           go test -v ./...
- build:
-    name: Build and Push Docker Image
+
+  versioning:
+    name: Versioning
     needs: test
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
+    outputs:
+      new_tag: ${{ steps.version.outputs.new_tag}}
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Calculate new version
+        id: version
+        run: |
+          lastTag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')
+          echo "lastTag= $lastTag"
+          if [ -z "$lastTag" ]; then
+            MAJOR=0
+            MINOR=1
+            PATCH=0
+            commitMessages=$(git log --oneline)
+          else
+            IFS='.' read -ra VERSION <<< "$lastTag"
+            MAJOR=${VERSION[0]:-0}
+            MINOR=${VERSION[1]:-1}
+            PATCH=${VERSION[2]:-0}
+            commitMessages=$(git log $lastTag..HEAD --oneline)
+          
+            echo $VERSION_MAJOR # Saída: 0
+            echo $VERSION_MINOR # Saída: 1
+            echo $VERSION_PATCH # Saída: 1
+          
+          fi
+          
+          if [[ $commitMessages == *"feat!"* ]]; then
+            MAJOR=$((MAJOR+1))
+            MINOR=0
+            PATCH=0
+          elif [[ $commitMessages == *"feat"* ]]; then
+            MINOR=$((MINOR+1))
+            PATCH=0
+          elif [[ $commitMessages == *"fix"* ]]; then
+            PATCH=$((PATCH+1))
+          else
+            PATCH=$((PATCH+1))
+          fi
+          
+          new_tag="$MAJOR.$MINOR.$PATCH"
+          echo "new_tag= $new_tag"
+          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
 
-    - name: Build and push Docker image
-      run: |
-        timestamp=$(date +%Y%m%d%H%M%S)
-        docker build . --file Dockerfile --tag jacksonbarreto/stlsdataparser:latest
-        docker tag jacksonbarreto/stlsdataparser:latest jacksonbarreto/stlsdataparser:$timestamp
-        docker push jacksonbarreto/stlsdataparser:latest
-        docker push jacksonbarreto/stlsdataparser:$timestamp
+  build-and-push-docker-image:
+    name: Build and Push Docker Image
+    needs: [test, versioning]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image and push to DockerHub
+        run: |
+          REPO=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
+          TAG="${{ needs.versioning.outputs.new_tag }}"
+          echo "Tag= $TAG"
+          docker build . --file Dockerfile --tag $REPO:$TAG
+          docker push $REPO:$TAG
+          docker tag $REPO:$TAG $REPO:latest
+          docker push $REPO:latest
+
+  push-tag-and-create-release:
+    name: Push Tag and Create Release
+    needs: [test, versioning, build-and-push-docker-image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+
+      - name: Push tag
+        run: |
+          git tag ${{ needs.versioning.outputs.new_tag }}
+          git push origin ${{ needs.versioning.outputs.new_tag }}
+
+      - name: Generate release notes
+        id: generate_notes
+        run: |
+          TAG_COUNT=$(git tag | wc -l)
+          if [ "$TAG_COUNT" -eq 0 ]; then
+            RELEASE_NOTES="starting"
+          elif [ "$TAG_COUNT" -eq 1 ]; then
+            echo "## What's New" > release-notes.txt
+            git log --pretty=format:"- %s" $(git rev-list --max-parents=0 HEAD)..${{ needs.versioning.outputs.new_tag }} >> release-notes.txt
+          else
+            LAST_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --max-count=2 | tail -n 1))
+            echo "## What's New" > release-notes.txt
+            git log --pretty=format:"- %s" $LAST_TAG..${{ needs.versioning.outputs.new_tag }} >> release-notes.txt
+          fi
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: ncipollo/release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag: ${{ needs.versioning.outputs.new_tag }}
+          name: Release ${{ needs.versioning.outputs.new_tag }}
+          draft: false
+          prerelease: false
+          bodyFile: release-notes.txt
