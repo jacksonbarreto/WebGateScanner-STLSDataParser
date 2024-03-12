@@ -33,15 +33,16 @@ func main() {
 	}
 	defer watcher.Close()
 
-	// Crie a pasta de erros se ela não existir
 	if _, err := os.Stat(errorPath); os.IsNotExist(err) {
 		os.Mkdir(errorPath, os.ModePerm)
 	}
 
-	// Worker pool para processar arquivos em paralelo
-	filesToProcess := make(chan string, 100) // Buffer pode ser ajustado conforme necessário
+	if _, err := os.Stat(pathToWatch); os.IsNotExist(err) {
+		os.Mkdir(pathToWatch, os.ModePerm)
+	}
 
-	// Iniciando workers
+	filesToProcess := make(chan string, 100)
+
 	for i := 0; i < totalWorkers; i++ {
 		worker := processor.NewWorker(kafkaProducer, errorPath, &lock, parser.NewParser(), processing)
 		go worker.Do(filesToProcess)
@@ -71,6 +72,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Bloqueia o main indefinidamente
 	select {}
 }
