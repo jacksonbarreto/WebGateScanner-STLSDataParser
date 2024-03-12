@@ -29,7 +29,6 @@ USER stlsdataparser
 
 # Copy the compiled application from the builder stage
 COPY --from=builder /app/cmd/stlsdataparser/app /stlsdataparser/app
-COPY --from=builder /app/config.yaml /stlsdataparser/config.yaml
 
 WORKDIR /stlsdataparser/
 # Run the compiled binary
