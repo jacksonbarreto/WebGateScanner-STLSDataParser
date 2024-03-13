@@ -4,8 +4,8 @@ go 1.21.0
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/jacksonbarreto/WebGateScanner-kafka v0.0.0-20240307200128-5a9a7d929a3a
-	github.com/jacksonbarreto/WebGateScanner-stls v0.0.0-20240307194442-4158a3959682
+	github.com/jacksonbarreto/WebGateScanner-kafka v0.0.0-20240313181312-bf1d30ccfea6
+	github.com/jacksonbarreto/WebGateScanner-stls v0.0.0-20240313174822-f08e0d61f2e0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/spf13/viper v1.18.2
 )
