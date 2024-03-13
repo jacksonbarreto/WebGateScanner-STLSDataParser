@@ -21,7 +21,7 @@ func main() {
 	errorPath := config.App().ErrorParsePath
 	pathToWatch := config.App().PathToWatch
 	totalWorkers := config.App().Workers
-	kafkaProducer, producerErr := producer.New(config.Kafka().TopicsProducer[0], config.Kafka().Brokers, config.Kafka().MaxRetry)
+	kafkaProducer, producerErr := producer.NewProducer(config.Kafka().TopicsProducer[0], config.Kafka().Brokers, config.Kafka().MaxRetry)
 	if producerErr != nil {
 		panic(producerErr)
 	}
