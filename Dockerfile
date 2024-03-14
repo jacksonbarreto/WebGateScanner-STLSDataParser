@@ -1,5 +1,5 @@
 # Stage 1: compiling the application
-FROM golang:1.21.0-alpine AS builder
+FROM --platform=linux/arm/v7 golang:1.21.0-alpine AS builder
 
 # set the working directory
 WORKDIR /app
