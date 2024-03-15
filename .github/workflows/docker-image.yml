@@ -52,22 +52,24 @@ jobs:
       - name: Calculate new version
         id: version
         run: |
-          lastTag=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//g' || echo 'v0.0.0')
-          echo "lastTag= $lastTag"
-          if [[ "$lastTag" == "v0.0.0" ]]; then
+          lastTag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')
+          echo "lastTag original= $lastTag"
+          lastTag=$(echo "$lastTag" | sed 's/^v//g' || echo '0.0.0')
+          echo "lastTag processed= $lastTag"
+          if [[ "$lastTag" == "" ]]; then
+            echo "No tags found. Starting from version 0.0.0."
             MAJOR=0
-            MINOR=1
+            MINOR=0
             PATCH=0
-            commitMessages=$(git log --oneline)
           else
-            IFS='.' read -ra VERSION <<< "${lastTag#v}"
+            IFS='.' read -ra VERSION <<< "$lastTag"
             MAJOR=${VERSION[0]}
-            MINOR=${VERSION[1]}
-            PATCH=${VERSION[2]}
-            commitMessages=$(git log $lastTag..HEAD --oneline)
-          
+            MINOR=${VERSION[1]:-0}
+            PATCH=${VERSION[2]:-0}
           fi
-          
+
+          commitMessages=$(git log "v$lastTag..HEAD" --oneline 2>/dev/null || git log --oneline)
+
           if [[ $commitMessages == *"feat!"* ]]; then
             MAJOR=$((MAJOR+1))
             MINOR=0
@@ -80,11 +82,11 @@ jobs:
           else
             PATCH=$((PATCH+1))
           fi
-          
+
           new_tag="v$MAJOR.$MINOR.$PATCH"
           echo "new_tag= $new_tag"
           echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
-
+  
 
   build-and-push-docker-image:
     name: Build and Push Docker Image
@@ -128,14 +130,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Import GPG Key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import
+        shell: bash
+
       - name: Configure Git
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
+          git config --global user.signingkey ${{ secrets.GPG_KEY_ID }}
+          git config --global commit.gpgsign true
 
       - name: Push tag
         run: |
-          git tag ${{ needs.versioning.outputs.new_tag }}
+          git tag -s ${{ needs.versioning.outputs.new_tag }} -m "Release ${{ needs.versioning.outputs.new_tag }}"
           git push origin ${{ needs.versioning.outputs.new_tag }}
 
       - name: Generate release notes
