@@ -8,6 +8,7 @@ import (
 	"github.com/jacksonbarreto/WebGateScanner-kafka/producer"
 	"log"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -52,12 +53,13 @@ func main() {
 		for {
 			select {
 			case event := <-watcher.Events:
-				if event.Op&fsnotify.Create == fsnotify.Create {
+				if event.Op&fsnotify.Create == fsnotify.Create && strings.HasSuffix(event.Name, ".done") {
 					log.Println("NewProcessor file detected:", event.Name)
+					originalFileName := strings.TrimSuffix(event.Name, ".done")
 					lock.Lock()
 					if !processing[event.Name] {
 						processing[event.Name] = true
-						filesToProcess <- event.Name
+						filesToProcess <- originalFileName
 					}
 					lock.Unlock()
 				}

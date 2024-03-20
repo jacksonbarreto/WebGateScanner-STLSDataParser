@@ -34,9 +34,19 @@ func (w *Worker) Do(files <-chan string) {
 		process := NewProcessor(w.kafkaProducer, w.psr)
 		if err := process.ProcessFile(filePath); err != nil {
 			log.Println("Failed to process file:", err)
-			os.Rename(filePath, filepath.Join(w.errorParsePath, filepath.Base(filePath)))
+			err := os.Rename(filePath, filepath.Join(w.errorParsePath, filepath.Base(filePath)))
+			if err != nil {
+				log.Println("Failed to move file:", err)
+			}
 		} else {
-			os.Remove(filePath)
+			err := os.Remove(filePath)
+			if err != nil {
+				log.Println("Failed to remove file:", err)
+			}
+			err = os.Remove(filePath + ".done")
+			if err != nil {
+				log.Println("Failed to remove file:", err)
+			}
 		}
 		w.lock.Lock()
 		delete(w.processing, filePath)
