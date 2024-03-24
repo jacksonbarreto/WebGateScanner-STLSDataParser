@@ -5,6 +5,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	"log"
+	"strings"
 )
 
 type Config struct {
@@ -13,18 +14,21 @@ type Config struct {
 }
 
 type AppConfig struct {
-	Environment    string
-	Id             string
-	PathToWatch    string
-	ErrorParsePath string
-	Workers        int
+	Environment          string
+	Id                   string
+	PathToWatch          string
+	ErrorParsePath       string
+	Workers              int
+	ReadyToProcessSuffix string
+	ProcessFileExtension string
+	ProcessFileQueueSize int
 }
 
 type KafkaConfig struct {
 	Brokers        []string
 	TopicsConsumer []string
-	TopicsProducer []string
-	TopicsError    []string
+	TopicProducer  string
+	TopicError     string
 	GroupID        string
 	MaxRetry       int
 }
@@ -70,6 +74,9 @@ func InitConfig(configPath string) {
 			log.Fatalf("configuration error: %v", err)
 		}
 	}
+
+	internalConfig.App.ProcessFileExtension = EnsureDotPrefix(internalConfig.App.ProcessFileExtension)
+	internalConfig.App.ReadyToProcessSuffix = EnsureDotPrefix(internalConfig.App.ReadyToProcessSuffix)
 }
 
 func Kafka() *KafkaConfig {
@@ -94,4 +101,11 @@ func validatePort(port int) error {
 		return fmt.Errorf("invalid port number %d: port must be between 1 and 65535", port)
 	}
 	return nil
+}
+
+func EnsureDotPrefix(extension string) string {
+	if strings.HasPrefix(extension, ".") {
+		return extension
+	}
+	return "." + extension
 }

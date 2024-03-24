@@ -3,62 +3,70 @@ package main
 import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/jacksonbarreto/WebGateScanner-STLSDataParser/config"
-	"github.com/jacksonbarreto/WebGateScanner-STLSDataParser/internal/parser"
 	"github.com/jacksonbarreto/WebGateScanner-STLSDataParser/internal/processor"
+	"github.com/jacksonbarreto/WebGateScanner-STLSDataParser/internal/sslresponseparser"
 	"github.com/jacksonbarreto/WebGateScanner-kafka/producer"
 	"log"
-	"os"
 	"strings"
 	"sync"
 )
 
 func main() {
+	const defaultBufferSize = 100
 	const configFilePath = ""
-	var (
-		processing = make(map[string]bool)
-		lock       = sync.Mutex{}
-	)
 	config.InitConfig(configFilePath)
-	errorPath := config.App().ErrorParsePath
-	pathToWatch := config.App().PathToWatch
-	totalWorkers := config.App().Workers
-	kafkaProducer, producerErr := producer.NewProducer(config.Kafka().TopicsProducer[0], config.Kafka().Brokers, config.Kafka().MaxRetry)
+	config.SetupDirectories()
+
+	kafkaProducer, producerErr := producer.NewProducer(config.Kafka().TopicProducer,
+		config.Kafka().Brokers, config.Kafka().MaxRetry)
 	if producerErr != nil {
 		panic(producerErr)
 	}
-	defer kafkaProducer.Close()
+	defer func(kafkaProducer *producer.Producer) {
+		err := kafkaProducer.Close()
+		if err != nil {
+			// TODO: log error
+		}
+	}(kafkaProducer)
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer watcher.Close()
+	defer func(watcher *fsnotify.Watcher) {
+		err := watcher.Close()
+		if err != nil {
+			// TODO: log error
+		}
+	}(watcher)
 
-	if _, err := os.Stat(errorPath); os.IsNotExist(err) {
-		os.Mkdir(errorPath, os.ModePerm)
+	processFileQueueSize := config.App().ProcessFileQueueSize
+	if processFileQueueSize == 0 {
+		processFileQueueSize = defaultBufferSize
 	}
-
-	if _, err := os.Stat(pathToWatch); os.IsNotExist(err) {
-		os.Mkdir(pathToWatch, os.ModePerm)
-	}
-
-	filesToProcess := make(chan string, 100)
+	filesToProcess := make(chan string, processFileQueueSize)
+	totalWorkers := config.App().Workers
+	var filesInProcess = make(map[string]bool)
+	var lock = sync.Mutex{}
 
 	for i := 0; i < totalWorkers; i++ {
-		worker := processor.NewWorker(kafkaProducer, errorPath, &lock, parser.NewParser(), processing)
-		go worker.Do(filesToProcess)
+		fileProcessor := processor.NewDefaultFileProcessor(kafkaProducer,
+			sslresponseparser.NewDefaultAssessmentSSLResponseParser(),
+			processor.NewDefaultHostExtractor(config.App().ProcessFileExtension),
+			config.App().ReadyToProcessSuffix, &lock, filesInProcess)
+		go fileProcessor.ProcessFileFromChannel(filesToProcess)
 	}
 
 	go func() {
 		for {
 			select {
 			case event := <-watcher.Events:
-				if event.Op&fsnotify.Create == fsnotify.Create && strings.HasSuffix(event.Name, ".done") {
+				if event.Op&fsnotify.Create == fsnotify.Create && strings.HasSuffix(event.Name, config.App().ReadyToProcessSuffix) {
 					log.Println("NewProcessor file detected:", event.Name)
-					originalFileName := strings.TrimSuffix(event.Name, ".done")
+					originalFileName := strings.TrimSuffix(event.Name, config.App().ReadyToProcessSuffix)
 					lock.Lock()
-					if !processing[event.Name] {
-						processing[event.Name] = true
+					if !filesInProcess[event.Name] {
+						filesInProcess[event.Name] = false
 						filesToProcess <- originalFileName
 					}
 					lock.Unlock()
@@ -69,7 +77,7 @@ func main() {
 		}
 	}()
 
-	err = watcher.Add(pathToWatch)
+	err = watcher.Add(config.App().PathToWatch)
 	if err != nil {
 		log.Fatal(err)
 	}

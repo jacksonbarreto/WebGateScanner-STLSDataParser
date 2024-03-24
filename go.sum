@@ -32,10 +32,10 @@ github.com/hashicorp/go-uuid v1.0.3 h1:2gKiV6YVmrJ1i2CKKa9obLvRieoRGviZFL26PcT/C
 github.com/hashicorp/go-uuid v1.0.3/go.mod h1:6SBZvOh/SIDV7/2o3Jml5SYk/TvGqwFJ/bN7x4byOro=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=
-github.com/jacksonbarreto/WebGateScanner-kafka v0.0.0-20240313181312-bf1d30ccfea6 h1:w5xaUXnwRywV6n09sVzgSuC0ekxQmboPOwH4JutPFIs=
-github.com/jacksonbarreto/WebGateScanner-kafka v0.0.0-20240313181312-bf1d30ccfea6/go.mod h1:JDhyY/+YD9nfgoC2m+qb+PfLPOnAKG3TnbAh5I6KjDA=
-github.com/jacksonbarreto/WebGateScanner-stls v0.0.0-20240313174822-f08e0d61f2e0 h1:K4qFHZAWx7uA5N10kccxMN/wF90vgVvfjs4AtOtEZ+c=
-github.com/jacksonbarreto/WebGateScanner-stls v0.0.0-20240313174822-f08e0d61f2e0/go.mod h1:Bqq74Qg39yy+E0XkwhbEWWPGHEMaO+/avjNjlWJ0WZA=
+github.com/jacksonbarreto/WebGateScanner-kafka v0.0.0-20240320154408-587717db7d73 h1:vhxXepmd6LGjIoAtU5BnRLlXiQAgb4Xnhr+EFEhoaPI=
+github.com/jacksonbarreto/WebGateScanner-kafka v0.0.0-20240320154408-587717db7d73/go.mod h1:JDhyY/+YD9nfgoC2m+qb+PfLPOnAKG3TnbAh5I6KjDA=
+github.com/jacksonbarreto/WebGateScanner-stls v0.0.0-20240324183904-8818153212bb h1:2dstTkI58mgiPMMJ0aDuGQ4vgRxNTdcgUswWwB/jXXo=
+github.com/jacksonbarreto/WebGateScanner-stls v0.0.0-20240324183904-8818153212bb/go.mod h1:Bqq74Qg39yy+E0XkwhbEWWPGHEMaO+/avjNjlWJ0WZA=
 github.com/jcmturner/aescts/v2 v2.0.0 h1:9YKLH6ey7H4eDBXW8khjYslgyqG2xZikXP0EQFKrle8=
 github.com/jcmturner/aescts/v2 v2.0.0/go.mod h1:AiaICIRyfYg35RUkr8yESTqvSy7csK90qZ5xfvvsoNs=
 github.com/jcmturner/dnsutils/v2 v2.0.0 h1:lltnkeZGL0wILNvrNiVCR6Ro5PGU/SeBvVO/8c/iPbo=
