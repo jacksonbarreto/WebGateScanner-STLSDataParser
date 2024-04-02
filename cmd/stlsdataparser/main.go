@@ -67,8 +67,8 @@ func main() {
 					log.Println("New file detected:", event.Name)
 					originalFileName := strings.TrimSuffix(event.Name, config.App().ReadyToProcessSuffix)
 					lock.Lock()
-					if !filesInProcess[event.Name] {
-						filesInProcess[event.Name] = false
+					if !filesInProcess[originalFileName] {
+						filesInProcess[originalFileName] = false
 						filesToProcess <- originalFileName
 					}
 					lock.Unlock()
@@ -97,8 +97,8 @@ func scanExistingFiles(directory string, filesToProcess chan<- string, filesInPr
 			originalFileName := strings.TrimSuffix(file.Name(), config.App().ReadyToProcessSuffix)
 			log.Println("Existing file detected:", file.Name())
 			lock.Lock()
-			if !filesInProcess[file.Name()] {
-				filesInProcess[file.Name()] = false
+			if !filesInProcess[originalFileName] {
+				filesInProcess[originalFileName] = false
 				filesToProcess <- originalFileName
 			}
 			lock.Unlock()
