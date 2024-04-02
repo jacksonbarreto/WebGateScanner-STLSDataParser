@@ -78,7 +78,7 @@ func (dfp *DefaultFileProcessor) ProcessFileFromChannel(files <-chan string) {
 			continue
 		}
 
-		removeFileError := os.Remove(filePath)
+		removeFileError := os.Remove(filepath.Join(config.App().PathToWatch, filePath))
 		if removeFileError != nil {
 			dfp.deleteFileFromProcess(filePath)
 			log.Println("Error removing file: ", removeFileError)
@@ -86,7 +86,7 @@ func (dfp *DefaultFileProcessor) ProcessFileFromChannel(files <-chan string) {
 			continue
 		}
 
-		removeDoneFileError := os.Remove(filePath + dfp.readyToProcessSuffix)
+		removeDoneFileError := os.Remove(filepath.Join(config.App().PathToWatch, filePath+dfp.readyToProcessSuffix))
 		if removeDoneFileError != nil {
 			dfp.deleteFileFromProcess(filePath)
 			log.Println("Error removing done file: ", removeDoneFileError)
