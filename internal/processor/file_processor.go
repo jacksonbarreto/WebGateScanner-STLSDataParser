@@ -6,6 +6,7 @@ import (
 	"github.com/jacksonbarreto/WebGateScanner-STLSDataParser/internal/sslresponseparser"
 	kmodels "github.com/jacksonbarreto/WebGateScanner-kafka/models"
 	"github.com/jacksonbarreto/WebGateScanner-kafka/producer"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -36,11 +37,14 @@ func NewDefaultFileProcessor(brokerProducer producer.IProducer,
 
 func (dfp *DefaultFileProcessor) ProcessFileFromChannel(files <-chan string) {
 	for filePath := range files {
+		log.Println("Starting Processing file: ", filePath)
 		dfp.lock.Lock()
 		if beingProcessed, exists := dfp.filesInProcess[filePath]; exists && !beingProcessed {
 			dfp.filesInProcess[filePath] = true
+			log.Println("Processing file (set true): ", filePath)
 			dfp.lock.Unlock()
 		} else {
+			log.Println("File already being processed: ", filePath)
 			dfp.lock.Unlock()
 			continue
 		}
@@ -48,6 +52,7 @@ func (dfp *DefaultFileProcessor) ProcessFileFromChannel(files <-chan string) {
 		fileContent, readingFileError := os.ReadFile(filePath)
 		if readingFileError != nil {
 			dfp.deleteFileFromProcess(filePath)
+			log.Println("Error reading file: ", readingFileError)
 			// TODO: log error
 			continue
 		}
@@ -55,6 +60,7 @@ func (dfp *DefaultFileProcessor) ProcessFileFromChannel(files <-chan string) {
 		assessmentResult, parsingError := dfp.fileParser.ParseFromJSON(fileContent)
 		if parsingError != nil {
 			dfp.deleteFileFromProcess(filePath)
+			log.Println("Error parsing file: ", parsingError)
 			// TODO: log error
 			continue
 		}
@@ -63,9 +69,11 @@ func (dfp *DefaultFileProcessor) ProcessFileFromChannel(files <-chan string) {
 		if publishError != nil {
 			renameError := os.Rename(filePath, filepath.Join(config.App().ErrorParsePath, filepath.Base(filePath)))
 			if renameError != nil {
+				log.Println("Error moving file to error path: ", renameError)
 				// TODO: log error
 			}
 			dfp.deleteFileFromProcess(filePath)
+			log.Println("Error publishing to broker: ", publishError)
 			// TODO: log error
 			continue
 		}
@@ -73,6 +81,7 @@ func (dfp *DefaultFileProcessor) ProcessFileFromChannel(files <-chan string) {
 		removeFileError := os.Remove(filePath)
 		if removeFileError != nil {
 			dfp.deleteFileFromProcess(filePath)
+			log.Println("Error removing file: ", removeFileError)
 			// TODO: log error
 			continue
 		}
@@ -80,6 +89,7 @@ func (dfp *DefaultFileProcessor) ProcessFileFromChannel(files <-chan string) {
 		removeDoneFileError := os.Remove(filePath + dfp.readyToProcessSuffix)
 		if removeDoneFileError != nil {
 			dfp.deleteFileFromProcess(filePath)
+			log.Println("Error removing done file: ", removeDoneFileError)
 			// TODO: log error
 			continue
 		}
@@ -90,7 +100,9 @@ func (dfp *DefaultFileProcessor) ProcessFileFromChannel(files <-chan string) {
 
 func (dfp *DefaultFileProcessor) deleteFileFromProcess(filePath string) {
 	dfp.lock.Lock()
+	log.Println("Deleting file from process: ", filePath)
 	delete(dfp.filesInProcess, filePath)
+	log.Println("Deleted file from process: ", filePath)
 	dfp.lock.Unlock()
 }
 

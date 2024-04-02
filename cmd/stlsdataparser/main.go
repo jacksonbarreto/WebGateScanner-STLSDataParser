@@ -7,6 +7,7 @@ import (
 	"github.com/jacksonbarreto/WebGateScanner-STLSDataParser/internal/sslresponseparser"
 	"github.com/jacksonbarreto/WebGateScanner-kafka/producer"
 	"log"
+	"os"
 	"strings"
 	"sync"
 )
@@ -57,12 +58,13 @@ func main() {
 		go fileProcessor.ProcessFileFromChannel(filesToProcess)
 	}
 
+	scanExistingFiles(config.App().PathToWatch, filesToProcess, filesInProcess, &lock)
 	go func() {
 		for {
 			select {
 			case event := <-watcher.Events:
 				if event.Op&fsnotify.Create == fsnotify.Create && strings.HasSuffix(event.Name, config.App().ReadyToProcessSuffix) {
-					log.Println("NewProcessor file detected:", event.Name)
+					log.Println("New file detected:", event.Name)
 					originalFileName := strings.TrimSuffix(event.Name, config.App().ReadyToProcessSuffix)
 					lock.Lock()
 					if !filesInProcess[event.Name] {
@@ -83,4 +85,23 @@ func main() {
 	}
 
 	select {}
+}
+
+func scanExistingFiles(directory string, filesToProcess chan<- string, filesInProcess map[string]bool, lock *sync.Mutex) {
+	files, err := os.ReadDir(directory)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), config.App().ReadyToProcessSuffix) {
+			originalFileName := strings.TrimSuffix(file.Name(), config.App().ReadyToProcessSuffix)
+			log.Println("Existing file detected:", file.Name())
+			lock.Lock()
+			if !filesInProcess[file.Name()] {
+				filesInProcess[file.Name()] = false
+				filesToProcess <- originalFileName
+			}
+			lock.Unlock()
+		}
+	}
 }
