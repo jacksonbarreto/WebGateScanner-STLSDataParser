@@ -49,7 +49,7 @@ func (dfp *DefaultFileProcessor) ProcessFileFromChannel(files <-chan string) {
 			continue
 		}
 
-		fileContent, readingFileError := os.ReadFile(filePath)
+		fileContent, readingFileError := os.ReadFile(filepath.Join(config.App().PathToWatch, filePath))
 		if readingFileError != nil {
 			dfp.deleteFileFromProcess(filePath)
 			log.Println("Error reading file: ", readingFileError)
