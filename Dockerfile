@@ -23,8 +23,9 @@ FROM alpine:3.19
 # Install bind-tools (delv)
 RUN apk add --no-cache bind-tools
 
-# Add a non-root user
-RUN adduser -D stlsdataparser
+# Add a non-root user with a specific UID/GID
+RUN addgroup -g 1000 stlsdataparser && \
+    adduser -D -u 1000 -G stlsdataparser stlsdataparser
 USER stlsdataparser
 
 # Copy the compiled application from the builder stage
