@@ -55,7 +55,7 @@ func (p *DefaultAssessmentSSLResponseParser) stringTimeToUnixTime(time string) (
 }
 
 func processSSLProtocols(protocols []stls.Protocols) []models.Protocol {
-	result := make([]models.Protocol, len(protocols))
+	var result []models.Protocol
 	for _, protocol := range protocols {
 		if protocol.Finding == "offered" || protocol.Finding == "offered with final" {
 			result = append(result, models.Protocol{
