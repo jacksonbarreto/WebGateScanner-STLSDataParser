@@ -1,5 +1,7 @@
 github.com/IBM/sarama v1.43.0 h1:YFFDn8mMI2QL0wOrG0J2sFoVIAFl7hS9JQi2YZsXtJc=
 github.com/IBM/sarama v1.43.0/go.mod h1:zlE6HEbC/SMQ9mhEYaF7nNLYOUyrs0obySKCckWP9BM=
+github.com/IBM/sarama v1.43.1 h1:Z5uz65Px7f4DhI/jQqEm/tV9t8aU+JUdTyW/K/fCXpA=
+github.com/IBM/sarama v1.43.1/go.mod h1:GG5q1RURtDNPz8xxJs3mgX6Ytak8Z9eLhAkJPObe2xE=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
@@ -36,6 +38,8 @@ github.com/jacksonbarreto/WebGateScanner-kafka v0.0.0-20240320154408-587717db7d7
 github.com/jacksonbarreto/WebGateScanner-kafka v0.0.0-20240320154408-587717db7d73/go.mod h1:JDhyY/+YD9nfgoC2m+qb+PfLPOnAKG3TnbAh5I6KjDA=
 github.com/jacksonbarreto/WebGateScanner-stls v0.0.0-20240324183904-8818153212bb h1:2dstTkI58mgiPMMJ0aDuGQ4vgRxNTdcgUswWwB/jXXo=
 github.com/jacksonbarreto/WebGateScanner-stls v0.0.0-20240324183904-8818153212bb/go.mod h1:Bqq74Qg39yy+E0XkwhbEWWPGHEMaO+/avjNjlWJ0WZA=
+github.com/jacksonbarreto/WebGateScanner-stls v0.0.0-20240403143140-4b94d823adb4 h1:Fn7qIwvs3U+72hHAI2FJJQbYY32r4IBgPP+e+zEXKsE=
+github.com/jacksonbarreto/WebGateScanner-stls v0.0.0-20240403143140-4b94d823adb4/go.mod h1:Bqq74Qg39yy+E0XkwhbEWWPGHEMaO+/avjNjlWJ0WZA=
 github.com/jcmturner/aescts/v2 v2.0.0 h1:9YKLH6ey7H4eDBXW8khjYslgyqG2xZikXP0EQFKrle8=
 github.com/jcmturner/aescts/v2 v2.0.0/go.mod h1:AiaICIRyfYg35RUkr8yESTqvSy7csK90qZ5xfvvsoNs=
 github.com/jcmturner/dnsutils/v2 v2.0.0 h1:lltnkeZGL0wILNvrNiVCR6Ro5PGU/SeBvVO/8c/iPbo=
@@ -92,6 +96,7 @@ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
+github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8=
 github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
