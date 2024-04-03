@@ -8,6 +8,7 @@ import (
 	"github.com/jacksonbarreto/WebGateScanner-kafka/producer"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -95,11 +96,12 @@ func scanExistingFiles(directory string, filesToProcess chan<- string, filesInPr
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), config.App().ReadyToProcessSuffix) {
 			originalFileName := strings.TrimSuffix(file.Name(), config.App().ReadyToProcessSuffix)
-			log.Println("Existing file detected:", file.Name())
+			fullPath := filepath.Join(directory, originalFileName)
+			log.Println("Existing file detected:", fullPath)
 			lock.Lock()
-			if !filesInProcess[originalFileName] {
-				filesInProcess[originalFileName] = false
-				filesToProcess <- originalFileName
+			if !filesInProcess[fullPath] {
+				filesInProcess[fullPath] = false
+				filesToProcess <- fullPath
 			}
 			lock.Unlock()
 		}
